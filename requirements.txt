@@ -1,3 +1,28 @@
+# Core dependencies
 streamlit==1.36.0
 ollama==0.4.0
 markdown==3.5.2
+
+# UI enhancements
+streamlit-chat==0.1.1
+streamlit-extras==0.3.6
+streamlit-option-menu==0.3.6
+
+# Utilities
+python-dotenv==1.0.1
+requests==2.31.0
+pydantic==2.6.1
+
+# Markdown processing
+markdown-it-py==3.0.0
+mdit-py-plugins==0.4.0
+
+# Development tools
+black==24.1.1
+flake8==7.0.0
+pytest==7.4.4
+
+# Optional - for advanced features
+# langchain==0.1.4
+# chromadb==0.4.22
+# sentence-transformers==2.2.2
