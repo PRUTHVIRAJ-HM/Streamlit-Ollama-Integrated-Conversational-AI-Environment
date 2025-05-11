@@ -1,7 +1,7 @@
 import streamlit as st
 import ollama
 import time
-
+import re
 # Set page configuration
 st.set_page_config(
     page_title="DeepSeek-R1 Chatbot",
@@ -52,17 +52,23 @@ def check_model_availability():
 
 # Function to generate response from Ollama
 
+import re
+
+import re
+
 def generate_response(prompt):
     try:
         if not check_model_availability():
-            return f"❌ Error: DeepSeek-R1 model is not available. Please make sure it’s pulled with 'ollama pull deepseek-r1:1.5b'."
+            return "❌ Error: DeepSeek-R1 model is not available."
 
         st.sidebar.success(f"Model selected: {st.session_state.model_name}")
 
+        # Create a placeholder for assistant message
         with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            full_response = ""
+            think_box = st.empty()
+            response_box = st.empty()
 
+            full_response = ""
             response_stream = ollama.chat(
                 model=st.session_state.model_name,
                 messages=[{"role": "user", "content": prompt}],
@@ -70,19 +76,39 @@ def generate_response(prompt):
             )
 
             for chunk in response_stream:
-                if chunk.get("message", {}).get("content"):
-                    content = chunk["message"]["content"]
+                content = chunk.get("message", {}).get("content", "")
+                if content:
                     full_response += content
-                    message_placeholder.markdown(full_response + "▌")
                     time.sleep(0.01)
 
-            message_placeholder.markdown(full_response)
+            # Extract think content
+            think_match = re.search(r"<think>(.*?)</think>", full_response, re.DOTALL)
+            think_content = think_match.group(1).strip() if think_match else None
+            if not think_content:
+                think_content = None  # Normalize empty think
+
+            # Clean final response
+            response_text = re.sub(r"<think>.*?</think>", "", full_response, flags=re.DOTALL).strip()
+
+            # Render think content if exists
+            if think_content:
+                with think_box.expander("🧠 What the assistant is thinking..."):
+                    st.markdown(think_content)
+            else:
+                think_box.empty()
+
+            # Render response
+            if response_text:
+                response_box.markdown(response_text)
+            else:
+                response_box.info("🤖 No direct response was generated.")
+
         return full_response
 
     except Exception as e:
-        error_msg = str(e)
-        st.error(f"❌ Sorry, I encountered an error: {error_msg}")
-        return f"❌ Error: {error_msg}"
+        st.error(f"❌ Error: {str(e)}")
+        return f"❌ Error: {str(e)}"
+
 
 # Chat input
 if prompt := st.chat_input("Ask something..."):
